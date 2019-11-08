@@ -1,0 +1,7 @@
+notebooks/experimental/data
+notebooks/experimental/.ipynb_checkpoints
+data/raw
+data/test
+arxiv_cs/__pycache__
+arxiv_cs/.idea
+arxiv_cs/.vscode
