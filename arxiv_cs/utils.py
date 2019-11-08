@@ -2,6 +2,8 @@ import gzip
 import json
 import os
 from pathlib import Path
+import datetime
+import re
 
 
 def raw2json(textfile, outfolder=None, compressed=False):
@@ -30,7 +32,7 @@ def raw2json(textfile, outfolder=None, compressed=False):
             json.dump(records, fout)
 
 
-def clean_df(df):
+def process_raw_df(df):
     """ Clean abstract and title fields from a pandas data frame."""
 
     df.abstract = df.abstract.str.strip()
@@ -43,10 +45,9 @@ def clean_df(df):
 
 
 # TODO: normalize authors.
-# TODO: parse date from id.
 
-def clean_raw_ds(jsonfile, outfolder, compressed=False):
-    """ Clean abstract and title fields directly from json file."""
+def process_raw_ds(jsonfile, outfolder, compressed=False):
+    """ Minimal cleaning for abstract and title fields directly from json file."""
 
     if compressed:
         with gzip.open(jsonfile, 'rt') as f:
@@ -56,8 +57,10 @@ def clean_raw_ds(jsonfile, outfolder, compressed=False):
             data = json.load(f)
 
     for record in data:
-        record['title'] = record['title'].strip().replace('\n', ' ').replace('\s+', ' ')
-        record['abstract'] = record['abstract'].strip().replace('\n', ' ').replace('\s+', ' ')
+        record['title'] = record['title'].strip().replace(
+            '\n', ' ').replace('\s+', ' ')
+        record['abstract'] = record['abstract'].strip().replace(
+            '\n', ' ').replace('\s+', ' ')
 
     if not os.path.exists(outfolder):
         os.mkdir(outfolder)
@@ -68,3 +71,23 @@ def clean_raw_ds(jsonfile, outfolder, compressed=False):
     else:
         with open(Path(outfolder) / Path(jsonfile).name, 'w') as f:
             json.dump(data, f)
+
+
+def extract_date(id_list):
+    p = re.compile('\d')
+    dates = []
+    for id in id_list:
+        if p.match(id):
+            parts = id.split('.')[0]
+            month = int(parts[2:])
+        else:
+            parts = id.split('/')[1]
+            month = int(parts[2:4])
+
+        year = int(parts[:2]) + 1900
+        if year < 1994:
+            year += 100
+
+        dates.append(datetime.date(year, month, 1))
+
+    return dates

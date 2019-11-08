@@ -102,13 +102,15 @@ def get_oai_chunk(params, url=OAI_URL, resumption_token=None):
     if response.status_code == 503:
         # by default wait 20 seconds
         seconds = int(response.headers.get('Retry-After', 20)) * 1.5
-        print(f"Retry-After from OAI-PMH request, waiting {seconds} seconds until retry ...")
+        print(
+            f"Retry-After from OAI-PMH request, waiting {seconds} seconds until retry ...")
         # log.info(f'Retry-After from OAI-PMH request, waiting {seconds} seconds until retry ...')
 
         time.sleep(seconds)
         return get_oai_chunk(params, resumption_token=resumption_token)
     else:
-        raise Exception("Unknown response status {}".format(response.status_code))
+        raise Exception(
+            "Unknown response status {}".format(response.status_code))
 
 
 def dump(records_parsed, output_file):
@@ -132,7 +134,6 @@ def dump(records_parsed, output_file):
 
 
 def harvest(params, output_file, sleep=20):
-
     """
 
     :param params: OAI parameters.
@@ -172,7 +173,8 @@ def harvest(params, output_file, sleep=20):
 
         if resumption_token is None:
             # log.info(f"Download finished, with {num_chunks} chunks and {num_records} records.")
-            print(f"Download finished, with {num_chunks} chunks and {num_records} records.")
+            print(
+                f"Download finished, with {num_chunks} chunks and {num_records} records.")
             return  # records
 
         print(f"sleeping {sleep} seconds")
