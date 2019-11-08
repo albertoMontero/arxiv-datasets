@@ -6,3 +6,4 @@ data/clean
 arxiv_cs/__pycache__
 arxiv_cs/.idea
 arxiv_cs/.vscode
+arxiv_cs/dummy.py
