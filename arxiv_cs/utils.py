@@ -85,7 +85,7 @@ def extract_date(id_list):
             month = int(parts[2:4])
 
         year = int(parts[:2]) + 1900
-        if year < 1994:
+        if year < 1993:
             year += 100
 
         dates.append(datetime.date(year, month, 1))
