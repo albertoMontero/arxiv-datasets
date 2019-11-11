@@ -1,5 +1,7 @@
 notebooks/experimental/data
 notebooks/experimental/.ipynb_checkpoints
+notebooks/text_classification/
+notebooks/image/data/
 data/processed/
 data/raw/
 data/test/

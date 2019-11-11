@@ -1,14 +1,11 @@
 import requests
 import xml.etree.ElementTree as ET
 import time
-import logging
 import json
 import gzip
 import os
 from pathlib import Path
-
-log = logging.getLogger()
-log.setLevel(logging.INFO)
+import argparse
 
 OAI_URL = 'https://export.arxiv.org/oai2'
 
@@ -16,6 +13,10 @@ OAI_NAMESPACES = {
     'OAI': 'http://www.openarchives.org/OAI/2.0/',
     'arXiv': 'http://arxiv.org/OAI/arXivRaw/'
 }
+
+ARXIV_SETS = ["cs", "econ", "eess", "math", "physics", "physics:astro-ph", "physics:cond-mat", "physics:gr-qc", "physics:hep-ex",
+              "physics:hep-lat", "physics:hep-ph", "physics:hep-th", "physics:math-ph", "physics:nlin", "physics:nucl-ex", "physics:nucl-th",
+              "physics:physics", "physics:quant-ph", "q-bio", "q-fin", "stat"]
 
 
 def _extract_resumption_token(elem):
@@ -46,7 +47,6 @@ def _check_errors(elem):
         )
     else:
         print("No errors in chunk")
-        # log.info("No errors in chunk")
 
 
 def _find(elem, key):
@@ -89,10 +89,7 @@ def get_oai_chunk(params, url=OAI_URL, resumption_token=None):
     if resumption_token:
         params = {'verb': 'ListRecords', 'resumptionToken': resumption_token}
 
-    # print("resumption_token: ", resumption_token)
     print("params: ", params)
-    # log.info("params: ", params)
-    # log.info("resumption_token: ", resumption_token)
 
     response = requests.get(url, params=params)
 
@@ -104,7 +101,6 @@ def get_oai_chunk(params, url=OAI_URL, resumption_token=None):
         seconds = int(response.headers.get('Retry-After', 20)) * 1.5
         print(
             f"Retry-After from OAI-PMH request, waiting {seconds} seconds until retry ...")
-        # log.info(f'Retry-After from OAI-PMH request, waiting {seconds} seconds until retry ...')
 
         time.sleep(seconds)
         return get_oai_chunk(params, resumption_token=resumption_token)
@@ -120,20 +116,7 @@ def dump(records_parsed, output_file):
             f.write(json.dumps(record) + '\n')
 
 
-# def save_to_csv(records_parsed, output_file, num_chunks):
-#
-#     fieldnames = ['id', 'authors', 'title', 'abstract', 'categories']
-#
-#     with open(output_file, 'a') as csvfile:
-#
-#         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-#         if num_chunks > 0:
-#             writer.writeheader()
-#         for record in records_parsed:
-#             writer.writerows(record)
-
-
-def harvest(params, output_file, sleep=20):
+def harvest(params, output_folder, sleep=20):
     """
 
     :param params: OAI parameters.
@@ -142,16 +125,22 @@ def harvest(params, output_file, sleep=20):
     :return: None
     """
 
-    if not os.path.exists(Path(output_file).parent):
-        raise Exception(f"Not valid folder {Path(output_file).parent}")
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
+    name_file = f"arxiv-{params['set']}.txt.gz"
+    output_file = os.path.join(output_folder, name_file)
+
+    print("output_file: ", output_file)
 
     if sleep < 15:
         raise Exception("Be nice, sleep must be > 15 seconds.")
 
-    resumption_token = None
+    resumption_token = params['resumptionToken']
+
     num_chunks = 0
     num_records = 0
-    # records = []
+    # records = []  # dev: temporal
 
     while True:
 
@@ -168,28 +157,47 @@ def harvest(params, output_file, sleep=20):
         num_chunks += 1
         num_records += len(records_parsed)
 
-        # log.info("num_chunks: {}  num_records: {}".format(num_chunks, num_records))
         print(f"num_chunks: {num_chunks}  num_records: {num_records}")
 
         if resumption_token is None:
-            # log.info(f"Download finished, with {num_chunks} chunks and {num_records} records.")
             print(
                 f"Download finished, with {num_chunks} chunks and {num_records} records.")
-            return  # records
+            print(f"Raw dataset stored in: {output_file}")
+            return  # records   # dev: temporal
 
         print(f"sleeping {sleep} seconds")
         time.sleep(sleep)
 
 
 def main():
-    parameters = {'verb': 'ListRecords', 'metadataPrefix': 'arXivRaw', 'from': '2019-10-01',
-                  'until': '2019-10-04', 'set': 'cs'}
+
+    parser = argparse.ArgumentParser(description='ArXiv harvest')
+    parser.add_argument("output_folder", type=str, help="mandatory arg. ")
+    parser.add_argument("-s", "--set", nargs='?', default="cs", type=str, choices=ARXIV_SETS)
+    parser.add_argument("-f", "--from_date", nargs='?', default=None, type=str, help="YYYY-MM-DD")
+    parser.add_argument("-u", "--until_date", nargs='?', default=None, type=str, help="YYYY-MM-DD")
+    parser.add_argument("-t", "--sleep", nargs='?', default=15, type=int,
+                        help="Delay between requests in seconds. Min. 12.")
+
+    parser.add_argument("-k", "--resumptionToken", nargs='?', default=None, type=str, help="Resumption token")
+    # parameters = {'verb': 'ListRecords', 'metadataPrefix': 'arXivRaw', 'from': '2019-10-01',
+    #               'until': '2019-10-04', 'set': 'cs'}
     # parameters = {'verb': 'ListRecords', 'metadataPrefix': 'arXivRaw', 'set': 'cs'}
 
-    # output_file = "../data/raw/arxiv_cs.txt.gz"
-    output_file = "../data/test/arxiv_cs.txt.gz"
+    # output_folder = "../data/test2"
 
-    harvest(parameters, output_file, sleep=15)
+    args = parser.parse_args()
+
+    arxiv_params = {'verb': 'ListRecords', 'metadataPrefix': 'arXivRaw', 'set': args.set}
+
+    if args.from_date:
+        arxiv_params['from'] = args.from_date
+    if args.until_date:
+        arxiv_params['until'] = args.until_date
+
+    arxiv_params['resumptionToken'] = args.resumptionToken
+
+    harvest(arxiv_params, args.output_folder, sleep=args.sleep)
 
 
 if __name__ == "__main__":

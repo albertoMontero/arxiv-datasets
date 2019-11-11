@@ -36,41 +36,14 @@ def process_raw_df(df):
     """ Clean abstract and title fields from a pandas data frame."""
 
     df.abstract = df.abstract.str.strip()
-    df.abstract = df.abstract.str.replace('\n', ' ').replace('\s+', ' ')
+    df.abstract = df.abstract.str.replace(
+        '\n', ' ', regex=True).replace('\s+', ' ', regex=True)
 
     df.title = df.title.str.strip()
-    df.title = df.title.str.replace('\n', ' ').replace('\s+', ' ')
+    df.title = df.title.str.replace(
+        '\n', ' ', regex=True).replace('\s+', ' ', regex=True)
 
     return df
-
-
-# TODO: normalize authors.
-
-def process_raw_ds(jsonfile, outfolder, compressed=False):
-    """ Minimal cleaning for abstract and title fields directly from json file."""
-
-    if compressed:
-        with gzip.open(jsonfile, 'rt') as f:
-            data = json.load(f)
-    else:
-        with open(jsonfile, 'r') as f:
-            data = json.load(f)
-
-    for record in data:
-        record['title'] = record['title'].strip().replace(
-            '\n', ' ').replace('\s+', ' ')
-        record['abstract'] = record['abstract'].strip().replace(
-            '\n', ' ').replace('\s+', ' ')
-
-    if not os.path.exists(outfolder):
-        os.mkdir(outfolder)
-
-    if compressed:
-        with gzip.open(Path(outfolder) / Path(jsonfile).name, 'wt') as f:
-            json.dump(data, f)
-    else:
-        with open(Path(outfolder) / Path(jsonfile).name, 'w') as f:
-            json.dump(data, f)
 
 
 def extract_date(id_list):
