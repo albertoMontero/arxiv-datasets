@@ -60,5 +60,13 @@ If for any reason the connection is interrupted, you can always resume your down
 
 ## License
 
-We distribute this repository (but data folder) under MIT license, which is the one most recognized open source licenses. It is short and easy to read and quite permissive. 
+We distribute this repository (except data folder) under MIT license, which is the one most recognized open source licenses. It is short and easy to read and quite permissive. 
 The data folder containing the datasets is under CC0 1.0 license, which is the arXive license for archive metadata.
+
+## Resources
+
+Some other related works:
+
+[ARXIV data from 24,000+ papers](https://www.kaggle.com/neelshah18/arxivdataset). This dataset contains all paper related to ML, CL, NER, AI and CV field publish between 1992 to 2018-Feb.
+
+[A set of scripts to grab public datasets from resources related to arXiv](https://github.com/mattbierbaum/arxiv-public-datasets). Very interesting project where besides arXiv metatada, full-text e-prints are analyzed.
