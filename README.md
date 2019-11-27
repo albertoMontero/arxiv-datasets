@@ -60,9 +60,7 @@ If for any reason the connection is interrupted, you can always resume your down
 
 ## License
 
-We distribute this repository (except data folder) under MIT license, which is the one most recognized open source licenses. It is short and easy to read and quite permissive. 
-The data folder containing the datasets is under CC0 1.0 license, which is the arXive license for archive metadata.
-
+MIT license, and CC0 1.0 license for data folder containing the dataset.
 ## Resources
 
 Some other related works:
